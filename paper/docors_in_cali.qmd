@@ -1,0 +1,74 @@
+---
+title: "Estimation of Respondents in Each State Using IPUMS ACS 2022"
+author: "Your Name"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+format: pdf
+jupyter: python3
+bibliography: references.bib
+---
+
+## 1. Introduction
+
+This document uses data from the 2022 American Community Survey (@ipums_acs) provided by IPUMS to estimate the total number of respondents in each U.S. state who have obtained a doctoral degree as their highest level of educational attainment. Python (@python) and its pandas (@pandas) package wer used o manupulate and display the data. We apply the ratio estimator approach of Laplace (@cochran_sampling) to estimate the total number of respondents in each state based on a known total for California, which had 391,171 respondents across all levels of education. The results of this estimation are then compared to the actual number of respondents.
+
+### 1.1 Data Source
+
+The data used for this analysis comes from IPUMS (@ipums_acs), specifically the 2022 ACS dataset. To obtain this data, follow these steps:
+
+1. Create an account at [IPUMS USA](https://usa.ipums.org/usa/).
+2. Use the data extraction tool and select the 2022 ACS dataset.
+3. Include the relevant variables:
+   - **STATEICP**: State Code (IPUMS variable for state).
+   - **EDUC**: Educational attainment variable (filtering for doctoral degrees).
+4. Once the dataset was processed it was downloaded to the `data` folder
+
+## 2. Overview of the Ratio Estimators Approach
+
+The ratio estimator approach is a common method in survey sampling that allows us to estimate totals based on known relationships between two variables. In this case, we use the ratio of respondents with a doctoral degree to the total number of respondents in each state. This ratio is then applied to the known total number of respondents in California (391,171) to estimate the total number of respondents in other states.
+
+The ratio estimator is calculated as follows:
+ $\hat{N_i} = \frac{\text{Doctoral Respondents}_i}{\text{Doctoral Respondents}_{\text{CA}}} \times \text{Total Respondents}_{\text{CA}}$ 
+
+Where:
+- $(\hat{N_i})$ is the estimated total number of respondents in state (i)
+- $(\text{Doctoral Respondents}_i)$ is the number of respondents with doctoral degrees in state (i)
+- $(\text{Total Respondents}_{\text{CA}}) $ is the known total number of respondents in California.
+
+## 3. Analysis and Results
+
+```{python}
+#| echo: false 
+#| label: fig-1
+# Import necessary libraries
+import pandas as pd
+
+# Load the IPUMS dataset (adjust the path accordingly)
+df = pd.read_csv("../data/analysis/doctoral_degree_by_state.csv")
+
+cali = df[df['state'] == 'California']
+cali
+```
+**Figure 1** This includes the data for california state exclusivly showing approximately 1.6% of respodants have obtained a doctorate.
+
+First lets just look at the state of california, we see her it has a ratio of aproximatly 1.6% of paricipants obtaind a doctoral degre. Using this ratio as an estimators for the other stats yeilds the results below.
+
+```{python}
+#| echo: false
+#| label: fig-2
+#add stimtion based on California
+cali_ratio = 0.016198
+df['estimated_count'] = df['n']*cali_ratio
+# Display the estimates
+df[['state', 'doctoral_count', 'n', 'ratio', 'estimated_count']]
+```
+
+## 4. Discussion of Results
+The results show that the ratio estimators approach can provide a reasonable approximation of the total number of respondents in each state based on the number of doctoral degree holders. However, there are some differences between the estimated and actual totals.
+
+These differences can be attributed to a variety of factors:
+
+Sampling Variation: The ratio of doctoral respondents to total respondents may vary between states, leading to estimation errors.
+State-Specific Factors: States with a large population of highly educated individuals, such as Massachusetts or New York, may have higher ratios of doctoral degree holders, skewing the estimates.
+Limitations of the Ratio Estimator: The ratio estimator assumes that the relationship between doctoral degree holders and total respondents is constant across all states, which may not be the case in reality.
+
+\newpage
